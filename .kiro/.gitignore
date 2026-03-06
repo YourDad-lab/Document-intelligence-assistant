@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.Python
+venv/
+ENV/
+*.log
+
+# Node
+node_modules/
+.next/
+out/
+build/
+.env.local
+
+# Vector Store
+rag_backend/vectorstore/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo

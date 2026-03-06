@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RAG Analytics Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&family=IBM+Plex+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="background-grid"></div>
+  <div class="glow-blob glow-blob-1"></div>
+  <div class="glow-blob glow-blob-2"></div>
+  
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-left">
+        <div class="logo">⚡</div>
+        <div>
+          <h1 class="title">RAG Analytics Dashboard</h1>
+          <p class="subtitle">Real-time monitoring · Separate Analytics Server</p>
+        </div>
+      </div>
+      <div class="live-indicator">
+        <div class="pulse"></div>
+        <span class="live-text">LIVE</span>
+        <span class="live-count" id="liveCount">0 queries tracked</span>
+      </div>
+      <button onclick="logout()" style="
+        padding: 8px 16px;
+        background: rgba(248,113,113,0.1);
+        border: 1px solid rgba(248,113,113,0.3);
+        border-radius: 10px;
+        color: #f87171;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: 'IBM Plex Mono', monospace;
+        transition: all 0.2s;
+        margin-left: 12px;
+      " onmouseover="this.style.background='rgba(248,113,113,0.2)'" onmouseout="this.style.background='rgba(248,113,113,0.1)'">
+        🚪 Logout
+      </button>
+    </header>
+    
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab active" data-tab="overview">Overview</button>
+      <button class="tab" data-tab="queries">Queries</button>
+      <button class="tab" data-tab="performance">Performance</button>
+      <button class="tab" data-tab="logs">Logs</button>
+    </div>
+    
+    <!-- Overview Tab -->
+    <div class="tab-content active" id="overview">
+      <div class="stats-grid">
+        <div class="stat-card" style="--accent: #38bdf8">
+          <div class="stat-glow"></div>
+          <div class="stat-header">
+            <span class="stat-label">Total Queries</span>
+            <span class="stat-icon">🔍</span>
+          </div>
+          <div class="stat-value" id="totalQueries">0</div>
+          <div class="stat-sub">tracked in real-time</div>
+          <div class="stat-line"></div>
+        </div>
+        
+        <div class="stat-card" style="--accent: #34d399">
+          <div class="stat-glow"></div>
+          <div class="stat-header">
+            <span class="stat-label">Overall Confidence</span>
+            <span class="stat-icon">✅</span>
+          </div>
+          <div class="stat-value" id="highConfidence">0%</div>
+          <div class="stat-sub">weighted average</div>
+          <div class="stat-line"></div>
+        </div>
+        
+        <div class="stat-card" style="--accent: #818cf8">
+          <div class="stat-glow"></div>
+          <div class="stat-header">
+            <span class="stat-label">Avg Latency</span>
+            <span class="stat-icon">⚡</span>
+          </div>
+          <div class="stat-value" id="avgLatency">0ms</div>
+          <div class="stat-sub">end-to-end</div>
+          <div class="stat-line"></div>
+        </div>
+        
+        <div class="stat-card" style="--accent: #fbbf24">
+          <div class="stat-glow"></div>
+          <div class="stat-header">
+            <span class="stat-label">Documents</span>
+            <span class="stat-icon">📄</span>
+          </div>
+          <div class="stat-value">255</div>
+          <div class="stat-sub">indexed</div>
+          <div class="stat-line"></div>
+        </div>
+      </div>
+      
+      <div class="charts-row">
+        <div class="chart-card chart-card-large">
+          <div class="chart-title">Query Volume — Hourly</div>
+          <canvas id="queryVolumeChart"></canvas>
+        </div>
+        
+        <div class="chart-card">
+          <div class="chart-title">Dataset Usage</div>
+          <canvas id="datasetChart"></canvas>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Queries Tab -->
+    <div class="tab-content" id="queries">
+      <div class="chart-card">
+        <div class="chart-title">Top Queries</div>
+        <div id="topQueriesList" class="queries-list"></div>
+      </div>
+    </div>
+    
+    <!-- Performance Tab -->
+    <div class="tab-content" id="performance">
+      <div class="stats-grid">
+        <div class="stat-card" style="--accent: #818cf8">
+          <div class="stat-glow"></div>
+          <div class="stat-header">
+            <span class="stat-label">Avg Retrieval</span>
+            <span class="stat-icon">🔎</span>
+          </div>
+          <div class="stat-value" id="avgRetrieval">0ms</div>
+          <div class="stat-sub">vector search</div>
+          <div class="stat-line"></div>
+        </div>
+        
+        <div class="stat-card" style="--accent: #38bdf8">
+          <div class="stat-glow"></div>
+          <div class="stat-header">
+            <span class="stat-label">Avg Generation</span>
+            <span class="stat-icon">🤖</span>
+          </div>
+          <div class="stat-value" id="avgGeneration">0ms</div>
+          <div class="stat-sub">answer generation</div>
+          <div class="stat-line"></div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Logs Tab -->
+    <div class="tab-content" id="logs">
+      <div class="chart-card">
+        <div class="chart-title">Recent Query Logs</div>
+        <div class="logs-table">
+          <div class="logs-header">
+            <span>Time</span>
+            <span>Query</span>
+            <span>Confidence</span>
+            <span>Latency</span>
+            <span>Status</span>
+          </div>
+          <div id="logsList" class="logs-body"></div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Footer -->
+    <footer class="footer">
+      <span>RAG Analytics v1.0 · Separate Server on Port 5000</span>
+      <span id="lastUpdated">Last updated: --:--:--</span>
+    </footer>
+  </div>
+  
+  <script>
+    // Check if user is logged in
+    if (sessionStorage.getItem('analyticsLoggedIn') !== 'true') {
+      window.location.href = '/login.html';
+    }
+    
+    // Add logout functionality
+    function logout() {
+      sessionStorage.removeItem('analyticsLoggedIn');
+      sessionStorage.removeItem('analyticsUsername');
+      window.location.href = '/login.html';
+    }
+  </script>
+  <script src="/app.js"></script>
+</body>
+</html>
